@@ -1,0 +1,222 @@
+REPORT Z_SAMPLE_ALV.
+
+Tables: EKKO, EKPO.
+
+Type-pools: slis.
+
+Types: Begin of struct_ekko,
+       ebeln type ekko-ebeln,
+       bukrs type ekko-bukrs,
+       loekz type ekko-loekz,
+       end of struct_ekko,
+
+       Begin of struct_ekpo,
+       ebeln type ekpo-ebeln,
+       statu type ekpo-statu,
+       aedat type ekpo-aedat,
+       matnr type ekpo-matnr,
+       end of struct_ekpo.
+
+
+Data: it_ekko type table of struct_ekko,
+      wa_ekko type struct_ekko,
+
+      it_ekpo type table of struct_ekpo,
+      wa_ekpo type struct_ekpo,
+
+      i_fieldcat TYPE slis_t_fieldcat_alv,
+      wa_fieldcat TYPE slis_fieldcat_alv,
+
+      it_fieldcat type slis_t_fieldcat_alv.
+
+
+Select-options: s_ebeln for ekko-ebeln.
+
+
+START-OF-SELECTION.
+
+PERFORM data_retrieval.
+
+Perform field_cat.
+
+Perform display_alv.
+
+
+
+
+
+
+
+
+*&---------------------------------------------------------------------*
+*&      Form  DATA_RETRIEVAL
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM DATA_RETRIEVAL .
+
+Select EBELN BUKRS LOEKZ from ekko into table it_ekko where ebeln in s_ebeln.
+
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  FIELD_CAT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM FIELD_CAT .
+
+wa_fieldcat-tabname = 'EKKO'.
+wa_fieldcat-fieldname = 'EBELN'.
+wa_fieldcat-seltext_m = 'EBELN'.
+append wa_fieldcat to i_fieldcat.
+clear wa_fieldcat.
+
+wa_fieldcat-tabname = 'EKKO'.
+wa_fieldcat-fieldname = 'BUKRS'.
+wa_fieldcat-seltext_m = 'BUKRS'.
+append wa_fieldcat to i_fieldcat.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'EKKO'.
+wa_fieldcat-fieldname = 'LOEKZ'.
+wa_fieldcat-seltext_m = 'LOEKZ'.
+append wa_fieldcat to i_fieldcat.
+clear wa_fieldcat.
+
+
+
+
+ENDFORM.
+
+
+
+
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM DISPLAY_ALV .
+
+CALL FUNCTION 'REUSE_ALV_LIST_DISPLAY'
+EXPORTING
+
+   I_CALLBACK_PROGRAM             = SY-REPID
+  I_CALLBACK_USER_COMMAND        = 'USER_COMMAND'
+
+   IT_FIELDCAT                    = i_fieldcat
+
+  TABLES
+    T_OUTTAB                       = it_ekko
+
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+
+ENDFORM.
+
+
+
+
+
+FORM USER_COMMAND USING UCOMMAND LIKE SY-UCOMM USER_FIELD TYPE SLIS_SELFIELD.
+  DATA d_ebeln TYPE ekko-ebeln.
+
+    d_ebeln = USER_FIELD-VALUE.
+
+
+    Select single EBELN STATU AEDAT MATNR from ekpo into wa_ekpo where ebeln = d_ebeln.
+    append wa_ekpo to it_ekpo.
+
+
+     Perform build_fieldcatalog_2.
+
+     Perform display_alv_2.
+
+
+CLEAR: wa_ekko.
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  BUILD_FIELDCATALOG_2
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM BUILD_FIELDCATALOG_2 .
+
+
+
+wa_fieldcat-tabname = 'EKPO'.
+wa_fieldcat-fieldname = 'EBELN'.
+wa_fieldcat-seltext_m = 'EBELN'.
+append wa_fieldcat to it_fieldcat.
+clear wa_fieldcat.
+
+wa_fieldcat-tabname = 'EKPO'.
+wa_fieldcat-fieldname = 'STATU'.
+wa_fieldcat-seltext_m = 'STATU'.
+append wa_fieldcat to  it_fieldcat.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'EKPO'.
+wa_fieldcat-fieldname = 'AEDAT'.
+wa_fieldcat-seltext_m = 'AEDAT'.
+append wa_fieldcat to it_fieldcat.
+clear wa_fieldcat.
+
+wa_fieldcat-tabname = 'EKPO'.
+wa_fieldcat-fieldname = 'MATNR'.
+wa_fieldcat-seltext_m = 'MATNR'.
+append wa_fieldcat to it_fieldcat.
+clear wa_fieldcat.
+
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV_2
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM DISPLAY_ALV_2 .
+
+
+CALL FUNCTION 'REUSE_ALV_LIST_DISPLAY'
+ EXPORTING
+  IT_FIELDCAT                    = it_fieldcat
+
+  TABLES
+    T_OUTTAB                       = it_ekpo
+
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+ENDFORM.
