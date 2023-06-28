@@ -1,0 +1,121 @@
+REPORT ZFORALLENTRIES2.
+
+Tables: EKPO, EKKO.
+
+Types: Begin of ekpo_struct,
+        ebeln  type ekpo-ebeln,
+        ebelp type ekpo-ebelp,
+        loekz type ekpo-loekz,
+        statu type ekpo-statu,
+        txz01 type ekpo-txz01,
+        matnr type ekpo-matnr,
+        werks type ekpo-werks,
+        bukrs type ekpo-bukrs,
+        end of ekpo_struct,
+
+        Begin of ekko_struct,
+        ebeln  type ekko-ebeln,
+        bstyp type ekko-bstyp,
+        lifnr type  ekko-lifnr,
+        spras type  ekko-spras,
+        zterm type ekko-zterm,
+        ernam type  ekko-ernam,
+        aedat type  ekko-aedat,
+        end of ekko_struct,
+
+
+       begin of final_struct,
+       ebeln  type ekpo-ebeln,
+        ebelp type ekpo-ebelp,
+        loekz type ekpo-loekz,
+        statu type ekpo-statu,
+        txz01 type ekpo-txz01,
+        matnr type ekpo-matnr,
+        werks type ekpo-werks,
+        bukrs type ekpo-bukrs,
+        bstyp type ekko-bstyp,
+        lifnr type  ekko-lifnr,
+        spras type  ekko-spras,
+        zterm type ekko-zterm,
+        ernam type  ekko-ernam,
+        aedat type  ekko-aedat,
+        end of final_struct.
+
+
+Data: it_ekpo type table of ekpo_struct,
+      wa_ekpo type ekpo_struct,
+
+      it_ekko type table of ekko_struct,
+      wa_ekko type ekko_struct,
+
+      it_final type table of final_struct,
+      wa_final type final_struct.
+
+
+Select-options: s_ebeln for ekpo-ebeln.
+
+Select EBELN EBELP LOEKZ STATU TXZ01 MATNR WERKS BUKRS
+        from ekpo
+        into table it_ekpo
+        where ebeln in  s_ebeln.
+
+        if it_ekpo is not initial.
+Select EBELN BSTYP LIFNR SPRAS ZTERM ERNAM AEDAT
+        from ekko
+        into table it_ekko
+        for all entries in it_ekpo
+        where ebeln = it_ekpo-ebeln.
+
+        endif.
+
+
+
+Loop at it_ekko into wa_ekko.
+
+wa_final-ebeln = wa_ekko-ebeln.
+wa_final-bstyp = wa_ekko-bstyp.
+wa_final-lifnr = wa_ekko-lifnr.
+wa_final-spras = wa_ekko-spras.
+wa_final-zterm = wa_ekko-zterm.
+wa_final-ernam = wa_ekko-ernam.
+wa_final-aedat = wa_ekko-aedat.
+
+
+Read table it_ekpo into wa_ekpo
+        with key ebeln = wa_ekko-ebeln.
+        wa_final-ebelp = wa_ekpo-ebelp.
+        wa_final-loekz = wa_ekpo-loekz.
+        wa_final-statu = wa_ekpo-statu.
+        wa_final-txz01 = wa_ekpo-txz01.
+        wa_final-matnr = wa_ekpo-matnr.
+        wa_final-werks = wa_ekpo-werks.
+        wa_final-bukrs = wa_ekpo-bukrs.
+
+
+
+append wa_final to it_final.
+clear wa_final.
+endloop.
+
+
+
+
+
+Loop at it_final into wa_final.
+
+write: / wa_final-ebeln,
+         wa_final-bstyp,
+         wa_final-lifnr,
+         wa_final-spras,
+         wa_final-zterm,
+         wa_final-ernam,
+         wa_final-aedat,
+         wa_final-ebelp,
+         wa_final-loekz,
+         wa_final-statu,
+         wa_final-txz01,
+         wa_final-matnr,
+         wa_final-werks,
+         wa_final-bukrs.
+
+endloop.
