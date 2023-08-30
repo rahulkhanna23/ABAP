@@ -1,0 +1,211 @@
+REPORT ZALV_PRACTICE_ABAPUSER18.
+
+Type-pools: slis.
+
+Tables: sflight, scarr.
+
+Types: Begin of st_scarr,
+       carrid type scarr-carrid,
+       carrname type scarr-carrname,
+       currcode type scarr-currcode,
+       end of st_scarr,
+
+       Begin of st_flight,
+       carrid type sflight-carrid,
+       connid type sflight-connid,
+       fldate type sflight-fldate,
+       planetype type sflight-planetype,
+       end of st_flight.
+
+Data:
+
+it_scarr type table of st_scarr,
+wa_scarr type st_scarr,
+
+it_flight type table of st_flight,
+      wa_flight type st_flight,
+
+it_fieldcat type slis_t_fieldcat_alv,
+it_fieldcat2 type slis_t_fieldcat_alv,
+wa_fieldcat type slis_fieldcat_alv.
+
+
+
+Select-options: s_carrid for scarr-carrid.
+
+Perform get_data_scarr.
+
+Perform field_cat_scarr.
+
+Perform display_alv.
+
+*&---------------------------------------------------------------------*
+*&      Form  GET_DATA_SCARR
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM GET_DATA_SCARR .
+
+Select carrid carrname currcode
+from scarr
+into table it_scarr
+where carrid in s_carrid.
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  FIELD_CAT_SCARR
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM FIELD_CAT_SCARR .
+
+clear wa_fieldcat.
+
+wa_fieldcat-tabname = 'scarr'.
+wa_fieldcat-fieldname = 'carrid'.
+wa_fieldcat-seltext_m = 'carrier id'.
+append wa_fieldcat to it_fieldcat.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'scarr'.
+wa_fieldcat-fieldname = 'carrname'.
+wa_fieldcat-seltext_m = 'carrier name'.
+append wa_fieldcat to it_fieldcat.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'scarr'.
+wa_fieldcat-fieldname = 'currcode'.
+wa_fieldcat-seltext_m = 'currency'.
+append wa_fieldcat to it_fieldcat.
+clear wa_fieldcat.
+
+
+
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM DISPLAY_ALV .
+
+CALL FUNCTION 'REUSE_ALV_LIST_DISPLAY'
+ EXPORTING
+
+  I_CALLBACK_PROGRAM             = SY-REPID
+
+   I_CALLBACK_USER_COMMAND        = 'USER_COMMAND'
+
+   IT_FIELDCAT                    = it_fieldcat
+
+  TABLES
+    T_OUTTAB                       = it_scarr
+
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+
+ENDFORM.
+
+
+FORM USER_COMMAND USING UCOMMAND LIKE SY-UCOMM USER_FIELD TYPE SLIS_SELFIELD.
+        Data d_carrid type scarr-carrid.
+        d_carrid = 'USER_FIELD-VALUE'.
+
+        Select carrid connid fldate planetype from sflight into table it_flight where carrid = d_carrid.
+
+
+
+      Perform field_cat_flight.
+
+      Perform display_alv_2.
+
+
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*&      Form  FIELD_CAT_FLIGHT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM FIELD_CAT_FLIGHT .
+
+wa_fieldcat-tabname = 'SFLIGHT'.
+wa_fieldcat-fieldname = 'carrid'.
+wa_fieldcat-seltext_m = 'carrier id'.
+append wa_fieldcat to it_fieldcat2.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'SFLIGHT'.
+wa_fieldcat-fieldname = 'connid'.
+wa_fieldcat-seltext_m = 'connection id'.
+append wa_fieldcat to it_fieldcat2.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'SFLIGHT'.
+wa_fieldcat-fieldname = 'fldate'.
+wa_fieldcat-seltext_m = 'date'.
+append wa_fieldcat to it_fieldcat2.
+clear wa_fieldcat.
+
+
+wa_fieldcat-tabname = 'SFLIGHT'.
+wa_fieldcat-fieldname = 'planetype'.
+wa_fieldcat-seltext_m = 'plane'.
+append wa_fieldcat to it_fieldcat2.
+clear wa_fieldcat.
+
+
+ENDFORM.
+
+
+
+*&---------------------------------------------------------------------*
+*&      Form  DISPLAY_ALV_2
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM DISPLAY_ALV_2 .
+
+CALL FUNCTION 'REUSE_ALV_LIST_DISPLAY'
+EXPORTING
+
+  IT_FIELDCAT                    = it_fieldcat2
+
+  TABLES
+    T_OUTTAB                       = it_flight
+
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
