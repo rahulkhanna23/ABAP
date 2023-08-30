@@ -1,0 +1,135 @@
+report ZBDCMM_ABAPUSER18.
+
+type-pools:  truxs.
+tables: mara, makt.
+
+selection-screen begin of block blck with frame title text-011.
+parameters:p_file   type rlgrap-filename.
+selection-screen end of block blck.
+
+Types: Begin of mara_struct,
+       matnr type mara-matnr,
+       maktx type makt-maktx,
+
+       end of mara_struct.
+
+
+Data: it_mara type table of mara_struct,
+      wa_mara type mara_struct.
+
+data: it_raw type  truxs_t_text_data.
+
+data:  it_bdcdata type table of bdcdata,
+      wa_bdcdata type bdcdata.
+
+
+
+ at selection-screen on value-request for p_file.
+  call function 'F4_FILENAME'
+   exporting
+     program_name        = syst-cprog
+     dynpro_number       = syst-dynnr
+     field_name          = 'P_FILE'
+   importing
+     file_name           = p_file.
+
+
+start-of-selection.
+
+Data: lv_data type string.
+lv_data = p_file.
+
+CALL FUNCTION 'GUI_UPLOAD'
+  EXPORTING
+    FILENAME                      = lv_data
+   FILETYPE                      = 'DAT'
+*   HAS_FIELD_SEPARATOR           = ' '
+*   HEADER_LENGTH                 = 0
+*   READ_BY_LINE                  = 'X'
+*   DAT_MODE                      = ' '
+*   CODEPAGE                      = ' '
+*   IGNORE_CERR                   = ABAP_TRUE
+*   REPLACEMENT                   = '#'
+*   CHECK_BOM                     = ' '
+*   VIRUS_SCAN_PROFILE            =
+*   NO_AUTH_CHECK                 = ' '
+* IMPORTING
+*   FILELENGTH                    =
+*   HEADER                        =
+  TABLES
+    DATA_TAB                      = it_mara
+
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+
+
+
+  loop at it_mara into wa_mara.
+  refresh it_bdcdata.
+  clear wa_bdcdata.
+
+
+
+perform bdc_dynpro      using 'SAPLMGMM' '0060'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'RMMG1-MBRSH'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=ENTR'.
+perform bdc_field       using 'RMMG1-MATNR'
+*'m002'.
+wa_mara-matnr.
+perform bdc_field       using 'RMMG1-MBRSH'
+                              'F'.
+perform bdc_field       using 'RMMG1-MTART'
+                              'ROH'.
+perform bdc_field       using 'RMMG1_REF-MATNR'
+                              '2400'.
+perform bdc_dynpro      using 'SAPLMGMM' '0070'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'MSICHTAUSW-DYTXT(02)'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=ENTR'.
+perform bdc_field       using 'MSICHTAUSW-KZSEL(01)'
+                              'X'.
+perform bdc_dynpro      using 'SAPLMGMM' '4004'.
+perform bdc_field       using 'BDC_OKCODE'
+                              '=BU'.
+perform bdc_field       using 'BDC_CURSOR'
+                              'MAKT-MAKTX'.
+perform bdc_field       using 'MAKT-MAKTX'
+                              wa_mara-maktx.
+perform bdc_field       using 'MARA-MEINS'
+                              'EA'.
+
+
+call transaction 'MM01' using it_bdcdata mode 'A'.
+clear wa_mara.
+if sy-subrc = 0.
+  message 'Data uploaded sucessfully' type 'S'.
+
+  else .
+    message 'Data uploading terminated, Please check excel for missing data' type 'E'.
+endif.
+
+endloop.
+
+form bdc_dynpro using program dynpro.
+  clear wa_bdcdata.
+  wa_bdcdata-program = program.
+  wa_bdcdata-dynpro = dynpro.
+  wa_bdcdata-dynbegin = 'X'.
+  append wa_bdcdata to it_bdcdata.
+  clear wa_bdcdata.
+  endform.
+
+  form bdc_field using fnam fval.
+     clear wa_bdcdata.
+  wa_bdcdata-fnam = fnam.
+  wa_bdcdata-fval = fval.
+  append wa_bdcdata to it_bdcdata.
+  clear wa_bdcdata.
+  endform.
