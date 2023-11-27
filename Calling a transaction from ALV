@@ -19,4 +19,38 @@ Calling a transaction from existing ALV report
 
 
 
+* New Rahul code
+
+* Data: it_tab_new type table of ITAB.
+
+    FORM USER_COMMAND using r_ucomm type sy-ucomm
+                            ls_selfield TYPE slis_selfield.
+
+
+
+    case r_ucomm.
+         when '&IC1'.
+
+
+                               SET PARAMETER ID 'MBN' FIELD ls_selfield-value.
+
+Select SINGLE GJAHR from EKBE into itab-gjahr where EBELN = ITAB-EBELN.
+                               SET PARAMETER ID 'MJA' FIELD ITAB-GJAHR.
+
+*                               Select SINGLE GJAHR from EKBE into itab-gjahr where EBELN = ITAB-EBELN.
+                                 CALL TRANSACTION 'MIGO' AND SKIP FIRST SCREEN.
+                         ENDCASE.
+
+
+
+* Rahul code ends here
+
+
+
+
+
+ENDFORM.
+
+
+
 * Rahul code ends here
