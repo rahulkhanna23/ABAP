@@ -1,0 +1,22 @@
+Calling a transaction from existing ALV report
+
+* New Rahul code
+
+    FORM USER_COMMAND using r_ucomm type sy-ucomm
+                            rs_selfield TYPE slis_selfield.
+
+    case r_ucomm.
+         when '&IC1'.
+             case rs_selfield-fieldname.
+                 when 'AWKEY'.
+                       Read table itab index rs_selfield-tabindex TRANSPORTING awkey.
+                           if sy-subrc = 0.
+                               SET PARAMETER ID 'AWK' FIELD ITAB-AWKEY.
+                               CALL TRANSACTION 'MIGO' AND SKIP FIRST SCREEN.
+                           ENDIF.
+                          ENDCASE.
+                         ENDCASE.
+
+
+
+* Rahul code ends here
